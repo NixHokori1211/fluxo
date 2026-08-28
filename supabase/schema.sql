@@ -179,3 +179,41 @@ create policy "Usuário substitui apenas o próprio avatar"
 create policy "Usuário apaga apenas o próprio avatar"
   on storage.objects for delete
   using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ---------- MESSAGES (mensagens diretas 1 a 1) ----------
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  recipient_id uuid not null references public.profiles(id) on delete cascade,
+  content text not null,
+  created_at timestamptz not null default now(),
+  read_at timestamptz,
+  constraint no_self_message check (sender_id <> recipient_id)
+);
+
+alter table public.messages enable row level security;
+
+create policy "Usuário vê apenas as próprias conversas"
+  on public.messages for select
+  using (auth.uid() = sender_id or auth.uid() = recipient_id);
+
+create policy "Usuário envia mensagens como ele mesmo"
+  on public.messages for insert
+  with check (auth.uid() = sender_id);
+
+create policy "Usuário marca como lida apenas mensagens recebidas"
+  on public.messages for update
+  using (auth.uid() = recipient_id)
+  with check (auth.uid() = recipient_id);
+
+create index if not exists messages_sender_id_idx on public.messages(sender_id);
+create index if not exists messages_recipient_id_idx on public.messages(recipient_id);
+create index if not exists messages_created_at_idx on public.messages(created_at);
+
+-- Habilita eventos em tempo real na tabela de mensagens
+do $$
+begin
+  alter publication supabase_realtime add table public.messages;
+exception
+  when duplicate_object then null;
+end $$;

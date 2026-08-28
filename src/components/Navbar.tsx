@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
-import { PlusSquare, Home } from "lucide-react";
+import { PlusSquare, Home, MessageCircle } from "lucide-react";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -12,6 +12,7 @@ export default async function Navbar() {
 
   let username: string | null = null;
   let avatarUrl: string | null = null;
+  let hasUnread = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -20,6 +21,13 @@ export default async function Navbar() {
       .single();
     username = profile?.username ?? null;
     avatarUrl = profile?.avatar_url ?? null;
+
+    const { count } = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", user.id)
+      .is("read_at", null);
+    hasUnread = (count ?? 0) > 0;
   }
 
   return (
@@ -44,6 +52,16 @@ export default async function Navbar() {
               aria-label="Nova publicação"
             >
               <PlusSquare size={22} />
+            </Link>
+            <Link
+              href="/messages"
+              className="relative text-foreground/70 transition hover:text-foreground"
+              aria-label="Mensagens"
+            >
+              <MessageCircle size={22} />
+              {hasUnread && (
+                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-danger" />
+              )}
             </Link>
             {username && (
               <Link

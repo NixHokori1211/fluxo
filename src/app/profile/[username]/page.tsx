@@ -71,11 +71,21 @@ export default async function ProfilePage({
                 Editar perfil
               </Link>
             ) : (
-              <FollowButton
-                targetUserId={profile.id}
-                currentUserId={user?.id ?? null}
-                initiallyFollowing={isFollowing}
-              />
+              <>
+                <FollowButton
+                  targetUserId={profile.id}
+                  currentUserId={user?.id ?? null}
+                  initiallyFollowing={isFollowing}
+                />
+                {user && (
+                  <Link
+                    href={`/messages/${profile.username}`}
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-black/5"
+                  >
+                    Mensagem
+                  </Link>
+                )}
+              </>
             )}
           </div>
           <p className="text-sm text-muted">@{profile.username}</p>

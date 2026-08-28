@@ -23,6 +23,7 @@ export default function ChatThread({
   const [messages, setMessages] = useState(initialMessages);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,20 +59,30 @@ export default function ChatThread({
     if (!content) return;
 
     setSending(true);
+    setError(null);
     setText("");
 
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({ sender_id: currentUserId, recipient_id: otherUserId, content })
-      .select("id, content, created_at, sender_id")
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .insert({ sender_id: currentUserId, recipient_id: otherUserId, content })
+        .select("id, content, created_at, sender_id")
+        .single();
 
-    setSending(false);
+      if (error) throw error;
 
-    if (!error && data) {
-      setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data]));
-    } else {
+      if (data) {
+        setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data]));
+      }
+    } catch (err) {
       setText(content);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível enviar. Tente novamente."
+      );
+    } finally {
+      setSending(false);
     }
   }
 
@@ -100,22 +111,25 @@ export default function ChatThread({
 
       <form
         onSubmit={handleSubmit}
-        className="flex items-center gap-2 border-t border-border px-4 py-3"
+        className="flex flex-col gap-1.5 border-t border-border px-4 py-3"
       >
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Escreva uma mensagem..."
-          className="flex-1 rounded-full border border-border bg-surface px-4 py-2 text-sm outline-none focus:border-accent"
-        />
-        <button
-          type="submit"
-          disabled={sending || !text.trim()}
-          className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground disabled:opacity-40"
-        >
-          Enviar
-        </button>
+        {error && <p className="text-xs text-danger">{error}</p>}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Escreva uma mensagem..."
+            className="flex-1 rounded-full border border-border bg-surface px-4 py-2 text-sm outline-none focus:border-accent"
+          />
+          <button
+            type="submit"
+            disabled={sending || !text.trim()}
+            className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground disabled:opacity-40"
+          >
+            Enviar
+          </button>
+        </div>
       </form>
     </div>
   );

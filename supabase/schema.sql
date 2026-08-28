@@ -217,3 +217,82 @@ begin
 exception
   when duplicate_object then null;
 end $$;
+
+-- ---------- NOTIFICATIONS ----------
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  actor_id uuid not null references public.profiles(id) on delete cascade,
+  type text not null check (type in ('like', 'comment', 'follow')),
+  post_id uuid references public.posts(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  read_at timestamptz
+);
+
+alter table public.notifications enable row level security;
+
+create policy "Usuário vê apenas as próprias notificações"
+  on public.notifications for select
+  using (auth.uid() = user_id);
+
+create policy "Usuário marca como lidas apenas as próprias notificações"
+  on public.notifications for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create index if not exists notifications_user_id_idx on public.notifications(user_id, created_at desc);
+
+-- Funções (security definer) que criam a notificação automaticamente.
+-- Rodam com privilégio elevado, então não precisam de política de insert pro usuário comum.
+
+create or replace function public.notify_on_like()
+returns trigger as $$
+declare
+  post_author uuid;
+begin
+  select author_id into post_author from public.posts where id = new.post_id;
+  if post_author is not null and post_author <> new.user_id then
+    insert into public.notifications (user_id, actor_id, type, post_id)
+    values (post_author, new.user_id, 'like', new.post_id);
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists on_like_created on public.likes;
+create trigger on_like_created
+  after insert on public.likes
+  for each row execute procedure public.notify_on_like();
+
+create or replace function public.notify_on_comment()
+returns trigger as $$
+declare
+  post_author uuid;
+begin
+  select author_id into post_author from public.posts where id = new.post_id;
+  if post_author is not null and post_author <> new.author_id then
+    insert into public.notifications (user_id, actor_id, type, post_id)
+    values (post_author, new.author_id, 'comment', new.post_id);
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists on_comment_created on public.comments;
+create trigger on_comment_created
+  after insert on public.comments
+  for each row execute procedure public.notify_on_comment();
+
+create or replace function public.notify_on_follow()
+returns trigger as $$
+begin
+  insert into public.notifications (user_id, actor_id, type)
+  values (new.following_id, new.follower_id, 'follow');
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists on_follow_created on public.follows;
+create trigger on_follow_created
+  after insert on public.follows
+  for each row execute procedure public.notify_on_follow();

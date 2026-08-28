@@ -62,6 +62,13 @@ export default function PostCard({
           userId={currentUserId}
           initialComments={post.comments}
         />
+
+        <Link
+          href={`/post/${post.id}`}
+          className="text-xs uppercase tracking-wide text-muted hover:text-accent"
+        >
+          Ver publicação
+        </Link>
       </div>
     </article>
   );

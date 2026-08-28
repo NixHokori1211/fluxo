@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
-import { PlusSquare, Home, MessageCircle } from "lucide-react";
+import { PlusSquare, Home, MessageCircle, Bell } from "lucide-react";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -12,7 +12,8 @@ export default async function Navbar() {
 
   let username: string | null = null;
   let avatarUrl: string | null = null;
-  let hasUnread = false;
+  let hasUnreadMessages = false;
+  let hasUnreadNotifications = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -22,12 +23,20 @@ export default async function Navbar() {
     username = profile?.username ?? null;
     avatarUrl = profile?.avatar_url ?? null;
 
-    const { count } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("recipient_id", user.id)
-      .is("read_at", null);
-    hasUnread = (count ?? 0) > 0;
+    const [{ count: msgCount }, { count: notifCount }] = await Promise.all([
+      supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", user.id)
+        .is("read_at", null),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .is("read_at", null),
+    ]);
+    hasUnreadMessages = (msgCount ?? 0) > 0;
+    hasUnreadNotifications = (notifCount ?? 0) > 0;
   }
 
   return (
@@ -54,12 +63,22 @@ export default async function Navbar() {
               <PlusSquare size={22} />
             </Link>
             <Link
+              href="/notifications"
+              className="relative text-foreground/70 transition hover:text-foreground"
+              aria-label="Notificações"
+            >
+              <Bell size={22} />
+              {hasUnreadNotifications && (
+                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-danger" />
+              )}
+            </Link>
+            <Link
               href="/messages"
               className="relative text-foreground/70 transition hover:text-foreground"
               aria-label="Mensagens"
             >
               <MessageCircle size={22} />
-              {hasUnread && (
+              {hasUnreadMessages && (
                 <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-danger" />
               )}
             </Link>

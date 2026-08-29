@@ -242,6 +242,14 @@ create policy "Usuário marca como lidas apenas as próprias notificações"
 
 create index if not exists notifications_user_id_idx on public.notifications(user_id, created_at desc);
 
+-- Habilita eventos em tempo real na tabela de notificações
+do $$
+begin
+  alter publication supabase_realtime add table public.notifications;
+exception
+  when duplicate_object then null;
+end $$;
+
 -- Funções (security definer) que criam a notificação automaticamente.
 -- Rodam com privilégio elevado, então não precisam de política de insert pro usuário comum.
 

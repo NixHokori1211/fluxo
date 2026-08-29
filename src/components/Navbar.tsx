@@ -2,7 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
-import { PlusSquare, Home, MessageCircle, Bell } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
+import MessagesBell from "@/components/MessagesBell";
+import { PlusSquare, Home } from "lucide-react";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -62,26 +64,8 @@ export default async function Navbar() {
             >
               <PlusSquare size={22} />
             </Link>
-            <Link
-              href="/notifications"
-              className="relative text-foreground/70 transition hover:text-foreground"
-              aria-label="Notificações"
-            >
-              <Bell size={22} />
-              {hasUnreadNotifications && (
-                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-danger" />
-              )}
-            </Link>
-            <Link
-              href="/messages"
-              className="relative text-foreground/70 transition hover:text-foreground"
-              aria-label="Mensagens"
-            >
-              <MessageCircle size={22} />
-              {hasUnreadMessages && (
-                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-danger" />
-              )}
-            </Link>
+            <NotificationBell userId={user.id} initialUnread={hasUnreadNotifications} />
+            <MessagesBell userId={user.id} initialUnread={hasUnreadMessages} />
             {username && (
               <Link
                 href={`/profile/${username}`}

@@ -10,29 +10,40 @@ export default async function FeedPage() {
 
   // Grupo pequeno de amigos: o feed mostra as publicações de todo mundo,
   // sem filtrar por quem você segue.
-  const { data: posts, error } = await supabase
-    .from("posts")
-    .select(
-      `id, image_url, caption, created_at,
-       author:profiles!posts_author_id_fkey ( id, username ),
-       likes ( user_id ),
-       comments ( id, content, profiles ( username ) )`
-    )
-    .order("created_at", { ascending: false })
-    .limit(30);
+  const [{ data: posts, error }, { data: myProfile }] = await Promise.all([
+    supabase
+      .from("posts")
+      .select(
+        `id, image_url, caption, created_at,
+         author:profiles!posts_author_id_fkey ( id, username, avatar_url ),
+         likes ( user_id ),
+         comments ( id, content, profiles ( username, avatar_url ) )`
+      )
+      .order("created_at", { ascending: false })
+      .limit(30),
+    user
+      ? supabase.from("profiles").select("avatar_url").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
+  ]);
 
   type RawPost = {
     id: string;
     image_url: string;
     caption: string | null;
     created_at: string;
-    author: { id: string; username: string } | { id: string; username: string }[] | null;
+    author:
+      | { id: string; username: string; avatar_url: string | null }
+      | { id: string; username: string; avatar_url: string | null }[]
+      | null;
     likes: { user_id: string }[] | null;
     comments:
       | {
           id: string;
           content: string;
-          profiles: { username: string } | { username: string }[] | null;
+          profiles:
+            | { username: string; avatar_url: string | null }
+            | { username: string; avatar_url: string | null }[]
+            | null;
         }[]
       | null;
   };
@@ -45,7 +56,7 @@ export default async function FeedPage() {
       image_url: p.image_url,
       caption: p.caption,
       created_at: p.created_at,
-      author: author ?? { id: "", username: "usuário" },
+      author: author ?? { id: "", username: "usuário", avatar_url: null },
       likeCount: p.likes?.length ?? 0,
       likedByMe: !!user && (p.likes ?? []).some((l) => l.user_id === user.id),
       comments: (p.comments ?? []).map((c) => {
@@ -54,6 +65,7 @@ export default async function FeedPage() {
           id: c.id,
           content: c.content,
           author_username: commentAuthor?.username ?? "usuário",
+          author_avatar_url: commentAuthor?.avatar_url ?? null,
         };
       }),
     };
@@ -86,7 +98,12 @@ export default async function FeedPage() {
         </div>
       ) : (
         items.map((post) => (
-          <PostCard key={post.id} post={post} currentUserId={user?.id ?? null} />
+          <PostCard
+            key={post.id}
+            post={post}
+            currentUserId={user?.id ?? null}
+            currentUserAvatarUrl={myProfile?.avatar_url ?? null}
+          />
         ))
       )}
     </div>

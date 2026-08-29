@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { cropToSquare } from "@/lib/image";
 import { ImagePlus } from "lucide-react";
 
 export default function EditProfilePage() {
@@ -20,6 +21,7 @@ export default function EditProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [processingAvatar, setProcessingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,9 +52,25 @@ export default function EditProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleAvatarFile(file: File | null) {
-    setNewAvatarFile(file);
-    setAvatarPreview(file ? URL.createObjectURL(file) : null);
+  async function handleAvatarFile(file: File | null) {
+    if (!file) {
+      setNewAvatarFile(null);
+      setAvatarPreview(null);
+      return;
+    }
+
+    setProcessingAvatar(true);
+    try {
+      const cropped = await cropToSquare(file);
+      setNewAvatarFile(cropped);
+      setAvatarPreview(URL.createObjectURL(cropped));
+    } catch {
+      // Se o navegador não suportar o recorte, envia a imagem original mesmo.
+      setNewAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    } finally {
+      setProcessingAvatar(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -125,7 +143,9 @@ export default function EditProfilePage() {
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <label className="relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-border bg-surface text-muted hover:border-accent">
-            {avatarPreview || avatarUrl ? (
+            {processingAvatar ? (
+              <span className="text-xs">Ajustando...</span>
+            ) : avatarPreview || avatarUrl ? (
               <Image
                 src={avatarPreview ?? avatarUrl!}
                 alt="Foto de perfil"
@@ -144,7 +164,9 @@ export default function EditProfilePage() {
               onChange={(e) => handleAvatarFile(e.target.files?.[0] ?? null)}
             />
           </label>
-          <p className="text-sm text-muted">Toque no círculo para trocar a foto</p>
+          <p className="text-sm text-muted">
+            Toque no círculo pra trocar a foto — ela é recortada em quadrado automaticamente.
+          </p>
         </div>
 
         <label className="flex flex-col gap-1 text-sm">
@@ -194,7 +216,7 @@ export default function EditProfilePage() {
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || processingAvatar}
             className="flex-1 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition hover:opacity-90 disabled:opacity-50"
           >
             {saving ? "Salvando..." : "Salvar"}

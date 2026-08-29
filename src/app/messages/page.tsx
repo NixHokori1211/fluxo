@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -78,8 +79,12 @@ export default async function MessagesListPage() {
                 href={`/messages/${c.username}`}
                 className="flex items-center gap-3 py-3"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-foreground">
-                  {c.username.slice(0, 1).toUpperCase()}
+                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-sm font-medium text-accent-foreground">
+                  {c.avatarUrl ? (
+                    <Image src={c.avatarUrl} alt="" fill className="object-cover" sizes="44px" />
+                  ) : (
+                    c.username.slice(0, 1).toUpperCase()
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">

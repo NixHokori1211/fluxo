@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -8,15 +9,18 @@ type Comment = {
   id: string;
   content: string;
   author_username: string;
+  author_avatar_url?: string | null;
 };
 
 export default function CommentSection({
   postId,
   userId,
+  currentUserAvatarUrl,
   initialComments,
 }: {
   postId: string;
   userId: string | null;
+  currentUserAvatarUrl?: string | null;
   initialComments: Comment[];
 }) {
   const router = useRouter();
@@ -53,6 +57,7 @@ export default function CommentSection({
           id: data.id,
           content: data.content,
           author_username: authorProfile?.username ?? "você",
+          author_avatar_url: currentUserAvatarUrl,
         },
       ]);
       setText("");
@@ -62,11 +67,20 @@ export default function CommentSection({
   return (
     <div className="flex flex-col gap-2">
       {comments.length > 0 && (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-2">
           {comments.map((c) => (
-            <li key={c.id} className="text-sm">
-              <span className="font-medium">{c.author_username}</span>{" "}
-              <span className="text-foreground/80">{c.content}</span>
+            <li key={c.id} className="flex items-start gap-2 text-sm">
+              <div className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-[10px] font-medium text-accent-foreground">
+                {c.author_avatar_url ? (
+                  <Image src={c.author_avatar_url} alt="" fill className="object-cover" sizes="20px" />
+                ) : (
+                  c.author_username.slice(0, 1).toUpperCase()
+                )}
+              </div>
+              <p>
+                <span className="font-medium">{c.author_username}</span>{" "}
+                <span className="text-foreground/80">{c.content}</span>
+              </p>
             </li>
           ))}
         </ul>

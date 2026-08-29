@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
 import NotificationBell from "@/components/NotificationBell";
 import MessagesBell from "@/components/MessagesBell";
+import ThemeToggle from "@/components/ThemeToggle";
 import { PlusSquare, Home, Users } from "lucide-react";
 
 export default async function Navbar() {
@@ -73,6 +74,7 @@ export default async function Navbar() {
             </Link>
             <NotificationBell userId={user.id} initialUnread={hasUnreadNotifications} />
             <MessagesBell userId={user.id} initialUnread={hasUnreadMessages} />
+            <ThemeToggle />
             {username && (
               <Link
                 href={`/profile/${username}`}
@@ -90,6 +92,7 @@ export default async function Navbar() {
           </nav>
         ) : (
           <nav className="flex items-center gap-3 text-sm">
+            <ThemeToggle />
             <Link href="/login" className="text-foreground/70 hover:text-foreground">
               Entrar
             </Link>

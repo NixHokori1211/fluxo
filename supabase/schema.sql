@@ -304,3 +304,71 @@ drop trigger if exists on_follow_created on public.follows;
 create trigger on_follow_created
   after insert on public.follows
   for each row execute procedure public.notify_on_follow();
+
+-- ---------- STORIES (expiram em 24h) ----------
+create table if not exists public.stories (
+  id uuid primary key default gen_random_uuid(),
+  author_id uuid not null references public.profiles(id) on delete cascade,
+  image_url text not null,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default (now() + interval '24 hours')
+);
+
+alter table public.stories enable row level security;
+
+create policy "Stories não expirados são públicos para leitura"
+  on public.stories for select
+  using (expires_at > now());
+
+create policy "Usuário cria apenas os próprios stories"
+  on public.stories for insert
+  with check (auth.uid() = author_id);
+
+create policy "Usuário apaga apenas os próprios stories"
+  on public.stories for delete
+  using (auth.uid() = author_id);
+
+create index if not exists stories_author_id_idx on public.stories(author_id);
+create index if not exists stories_expires_at_idx on public.stories(expires_at);
+
+create table if not exists public.story_views (
+  story_id uuid not null references public.stories(id) on delete cascade,
+  viewer_id uuid not null references public.profiles(id) on delete cascade,
+  viewed_at timestamptz not null default now(),
+  primary key (story_id, viewer_id)
+);
+
+alter table public.story_views enable row level security;
+
+create policy "Usuário vê apenas as próprias visualizações"
+  on public.story_views for select
+  using (auth.uid() = viewer_id);
+
+create policy "Autor vê visualizações dos próprios stories"
+  on public.story_views for select
+  using (
+    exists (
+      select 1 from public.stories s
+      where s.id = story_views.story_id and s.author_id = auth.uid()
+    )
+  );
+
+create policy "Usuário registra visualização como ele mesmo"
+  on public.story_views for insert
+  with check (auth.uid() = viewer_id);
+
+insert into storage.buckets (id, name, public)
+values ('stories', 'stories', true)
+on conflict (id) do nothing;
+
+create policy "Imagens de stories são públicas para leitura"
+  on storage.objects for select
+  using (bucket_id = 'stories');
+
+create policy "Usuário autenticado envia stories"
+  on storage.objects for insert
+  with check (bucket_id = 'stories' and auth.role() = 'authenticated');
+
+create policy "Usuário apaga apenas os próprios arquivos de stories"
+  on storage.objects for delete
+  using (bucket_id = 'stories' and auth.uid()::text = (storage.foldername(name))[1]);

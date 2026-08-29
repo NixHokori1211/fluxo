@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchPostsPage } from "@/lib/posts";
+import { fetchActiveStoryGroups } from "@/lib/stories";
 import FeedList from "@/components/FeedList";
+import StoriesBar from "@/components/StoriesBar";
 
 export default async function FeedPage() {
   const supabase = await createClient();
@@ -11,15 +13,20 @@ export default async function FeedPage() {
 
   // Grupo pequeno de amigos: o feed mostra as publicações de todo mundo,
   // sem filtrar por quem você segue. Carrega em páginas de 20.
-  const [{ items, nextCursor, error }, { data: myProfile }] = await Promise.all([
+  const [{ items, nextCursor, error }, { data: myProfile }, storyGroups] = await Promise.all([
     fetchPostsPage(supabase, user?.id ?? null, { limit: 20 }),
     user
       ? supabase.from("profiles").select("avatar_url").eq("id", user.id).single()
       : Promise.resolve({ data: null }),
+    fetchActiveStoryGroups(supabase, user?.id ?? null),
   ]);
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8">
+      {(storyGroups.length > 0 || user) && (
+        <StoriesBar groups={storyGroups} currentUserId={user?.id ?? null} />
+      )}
+
       {!user && (
         <div className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-muted">
           Você está vendo as publicações do grupo.{" "}

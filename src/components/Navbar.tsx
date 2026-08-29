@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/LogoutButton";
 import NotificationBell from "@/components/NotificationBell";
 import MessagesBell from "@/components/MessagesBell";
-import { PlusSquare, Home } from "lucide-react";
+import { PlusSquare, Home, Users } from "lucide-react";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -63,6 +63,13 @@ export default async function Navbar() {
               aria-label="Nova publicação"
             >
               <PlusSquare size={22} />
+            </Link>
+            <Link
+              href="/members"
+              className="text-foreground/70 transition hover:text-foreground"
+              aria-label="Membros"
+            >
+              <Users size={22} />
             </Link>
             <NotificationBell userId={user.id} initialUnread={hasUnreadNotifications} />
             <MessagesBell userId={user.id} initialUnread={hasUnreadMessages} />

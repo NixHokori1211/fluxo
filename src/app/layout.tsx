@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -17,6 +17,14 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "pulso",
   description: "Compartilhe momentos com quem você segue.",
+  appleWebApp: {
+    title: "pulso",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#7c3aed",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

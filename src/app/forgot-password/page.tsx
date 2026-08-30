@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import DitherEffect2 from "@/components/effects/DitherEffect2";
 
 export default function ForgotPasswordPage() {
   const supabase = createClient();
@@ -43,55 +44,69 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="mx-auto max-w-sm px-4 py-16 text-center">
-        <h1 className="font-display text-3xl italic">Link enviado</h1>
-        <p className="mt-3 text-sm text-muted">
-          Enviamos um link de redefinição para <b>{email}</b>. Abra o e-mail
-          nesse mesmo navegador e clique no link. Confira também a caixa de spam.
-        </p>
-        <Link href="/login" className="mt-6 inline-block text-accent hover:underline">
-          Voltar ao login
-        </Link>
+      <div className="relative isolate min-h-[calc(100dvh-57px)] overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <DitherEffect2 background="#0b0a10" color="#9d7cf5" size={40} speed={32} scale={45} />
+        </div>
+        <div className="mx-auto max-w-sm px-4 py-16 text-center">
+          <h1 className="font-display text-3xl italic text-white">Link enviado</h1>
+          <p className="mt-3 text-sm text-white/60">
+            Enviamos um link de redefinição para <b className="text-white">{email}</b>. Abra o
+            e-mail nesse mesmo navegador e clique no link. Confira também a caixa de spam.
+          </p>
+          <Link href="/login" className="mt-6 inline-block text-accent hover:underline">
+            Voltar ao login
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-6 px-4 py-16">
-      <div className="text-center">
-        <h1 className="font-display text-4xl italic">Esqueceu a senha?</h1>
-        <p className="mt-2 text-sm text-muted">
-          Digite seu e-mail e enviamos um link pra redefinir.
-        </p>
+    <div className="relative isolate min-h-[calc(100dvh-57px)] overflow-hidden">
+      <div className="absolute inset-0 -z-10">
+        <DitherEffect2 background="#0b0a10" color="#9d7cf5" size={40} speed={32} scale={45} />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
-          type="email"
-          required
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="rounded-lg border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-accent"
-        />
+      <div className="mx-auto flex max-w-sm flex-col gap-6 px-4 py-16">
+        <div className="text-center">
+          <h1 className="font-display text-4xl italic text-white">Esqueceu a senha?</h1>
+          <p className="mt-2 text-sm text-white/60">
+            Digite seu e-mail e enviamos um link pra redefinir.
+          </p>
+        </div>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-2 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition hover:opacity-90 disabled:opacity-50"
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/30 p-6 backdrop-blur-md"
         >
-          {loading ? "Enviando..." : "Enviar link de redefinição"}
-        </button>
-      </form>
+          <input
+            type="email"
+            required
+            placeholder="E-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/40 focus:border-accent"
+          />
 
-      <p className="text-center text-sm text-muted">
-        Lembrou a senha?{" "}
-        <Link href="/login" className="text-accent hover:underline">
-          Entrar
-        </Link>
-      </p>
+          {error && <p className="text-sm text-danger">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-2 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition hover:opacity-90 disabled:opacity-50"
+          >
+            {loading ? "Enviando..." : "Enviar link de redefinição"}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-white/60">
+          Lembrou a senha?{" "}
+          <Link href="/login" className="text-accent hover:underline">
+            Entrar
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

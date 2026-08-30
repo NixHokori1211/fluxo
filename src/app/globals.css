@@ -49,3 +49,13 @@ body {
 .font-display {
   font-family: var(--font-fraunces), Georgia, serif;
 }
+
+/* Evita que o Safari no iPhone dê zoom automático ao focar em campos
+   de texto com fonte menor que 16px. */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}

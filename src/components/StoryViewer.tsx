@@ -133,7 +133,10 @@ export default function StoryViewer({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative flex h-full w-full max-w-md flex-col">
-        <div className="absolute left-3 right-3 top-3 z-10 flex gap-1">
+        <div
+          className="absolute left-3 right-3 z-10 flex gap-1"
+          style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
+        >
           {group.stories.map((s, i) => (
             <div key={s.id} className="h-1 flex-1 overflow-hidden rounded-full bg-white/30">
               <div
@@ -147,7 +150,10 @@ export default function StoryViewer({
           ))}
         </div>
 
-        <div className="absolute left-3 right-3 top-8 z-10 flex items-center justify-between">
+        <div
+          className="absolute left-3 right-3 z-10 flex items-center justify-between"
+          style={{ top: "calc(2rem + env(safe-area-inset-top))" }}
+        >
           <div className="flex items-center gap-2">
             <div className="relative h-7 w-7 overflow-hidden rounded-full bg-accent">
               {group.avatarUrl && (
@@ -168,7 +174,10 @@ export default function StoryViewer({
         </div>
 
         {isOwnStory && (
-          <div className="absolute bottom-4 left-3 right-3 z-10">
+          <div
+            className="absolute left-3 right-3 z-10"
+            style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
+          >
             {showViewers ? (
               <div className="max-h-56 overflow-y-auto rounded-2xl bg-black/70 p-3 backdrop-blur">
                 <div className="mb-2 flex items-center justify-between">

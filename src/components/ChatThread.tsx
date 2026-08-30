@@ -182,7 +182,8 @@ export default function ChatThread({
 
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-1.5 border-t border-border px-4 py-3"
+        className="flex flex-col gap-1.5 border-t border-border px-4 pt-3"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       >
         {error && <p className="text-xs text-danger">{error}</p>}
         <div className="flex items-center gap-2">

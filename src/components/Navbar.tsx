@@ -5,6 +5,7 @@ import LogoutButton from "@/components/LogoutButton";
 import NotificationBell from "@/components/NotificationBell";
 import MessagesBell from "@/components/MessagesBell";
 import ThemeToggle from "@/components/ThemeToggle";
+import BottomNav from "@/components/BottomNav";
 import { PlusSquare, Home, Users } from "lucide-react";
 
 export default async function Navbar() {
@@ -43,68 +44,84 @@ export default async function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur">
-      <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-        <Link href="/feed" className="font-display text-2xl tracking-tight">
-          pulso
-        </Link>
+    <>
+      <header
+        className="sticky top-0 z-10 border-b border-border bg-surface/90 backdrop-blur"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+          <Link href="/feed" className="font-display text-2xl tracking-tight">
+            pulso
+          </Link>
 
-        {user ? (
-          <nav className="flex items-center gap-4">
-            <Link
-              href="/feed"
-              className="text-foreground/70 transition hover:text-foreground"
-              aria-label="Feed"
-            >
-              <Home size={22} />
-            </Link>
-            <Link
-              href="/post/new"
-              className="text-foreground/70 transition hover:text-foreground"
-              aria-label="Nova publicação"
-            >
-              <PlusSquare size={22} />
-            </Link>
-            <Link
-              href="/members"
-              className="text-foreground/70 transition hover:text-foreground"
-              aria-label="Membros"
-            >
-              <Users size={22} />
-            </Link>
-            <NotificationBell userId={user.id} initialUnread={hasUnreadNotifications} />
-            <MessagesBell userId={user.id} initialUnread={hasUnreadMessages} />
-            <ThemeToggle />
-            {username && (
+          {user ? (
+            <nav className="flex items-center gap-4">
               <Link
-                href={`/profile/${username}`}
-                className="relative h-8 w-8 overflow-hidden rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-medium"
-                aria-label="Meu perfil"
+                href="/feed"
+                className="hidden text-foreground/70 transition hover:text-foreground sm:inline-flex"
+                aria-label="Feed"
               >
-                {avatarUrl ? (
-                  <Image src={avatarUrl} alt="" fill className="object-cover" sizes="32px" />
-                ) : (
-                  username.slice(0, 1).toUpperCase()
-                )}
+                <Home size={22} />
               </Link>
-            )}
-            <LogoutButton />
-          </nav>
-        ) : (
-          <nav className="flex items-center gap-3 text-sm">
-            <ThemeToggle />
-            <Link href="/login" className="text-foreground/70 hover:text-foreground">
-              Entrar
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-full bg-accent px-4 py-1.5 text-accent-foreground hover:opacity-90"
-            >
-              Criar conta
-            </Link>
-          </nav>
-        )}
-      </div>
-    </header>
+              <Link
+                href="/post/new"
+                className="hidden text-foreground/70 transition hover:text-foreground sm:inline-flex"
+                aria-label="Nova publicação"
+              >
+                <PlusSquare size={22} />
+              </Link>
+              <Link
+                href="/members"
+                className="hidden text-foreground/70 transition hover:text-foreground sm:inline-flex"
+                aria-label="Membros"
+              >
+                <Users size={22} />
+              </Link>
+              <span className="hidden sm:inline-flex">
+                <NotificationBell userId={user.id} initialUnread={hasUnreadNotifications} />
+              </span>
+              <MessagesBell userId={user.id} initialUnread={hasUnreadMessages} />
+              <ThemeToggle />
+              {username && (
+                <Link
+                  href={`/profile/${username}`}
+                  className="relative hidden h-8 w-8 overflow-hidden rounded-full bg-accent text-accent-foreground sm:flex items-center justify-center text-sm font-medium"
+                  aria-label="Meu perfil"
+                >
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt="" fill className="object-cover" sizes="32px" />
+                  ) : (
+                    username.slice(0, 1).toUpperCase()
+                  )}
+                </Link>
+              )}
+              <LogoutButton />
+            </nav>
+          ) : (
+            <nav className="flex items-center gap-3 text-sm">
+              <ThemeToggle />
+              <Link href="/login" className="text-foreground/70 hover:text-foreground">
+                Entrar
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-full bg-accent px-4 py-1.5 text-accent-foreground hover:opacity-90"
+              >
+                Criar conta
+              </Link>
+            </nav>
+          )}
+        </div>
+      </header>
+
+      {user && (
+        <BottomNav
+          userId={user.id}
+          username={username}
+          avatarUrl={avatarUrl}
+          hasUnreadNotifications={hasUnreadNotifications}
+        />
+      )}
+    </>
   );
 }

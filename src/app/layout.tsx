@@ -51,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Navbar />
-        <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+        <main className="flex-1 pb-16">{children}</main>
       </body>
     </html>
   );

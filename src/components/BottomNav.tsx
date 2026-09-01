@@ -31,12 +31,13 @@ export default function BottomNav({
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-white/10 bg-surface/55 backdrop-blur-2xl backdrop-saturate-150 sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-white/10 bg-surface/55 backdrop-blur-2xl backdrop-saturate-150"
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
         boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.08)",
       }}
     >
+      <div className="mx-auto flex w-full max-w-2xl items-center justify-around">
       <Link href="/feed" className="flex flex-1 items-center justify-center py-3.5" aria-label="Início">
         <Home size={25} strokeWidth={isActive("/feed") ? 2.5 : 1.8} className={iconClass(isActive("/feed"))} />
       </Link>
@@ -76,6 +77,7 @@ export default function BottomNav({
           )}
         </div>
       </Link>
+      </div>
     </nav>
   );
 }

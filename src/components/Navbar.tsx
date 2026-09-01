@@ -4,6 +4,7 @@ import LogoutButton from "@/components/LogoutButton";
 import MessagesBell from "@/components/MessagesBell";
 import ThemeToggle from "@/components/ThemeToggle";
 import BottomNav from "@/components/BottomNav";
+import Mascot from "@/components/Mascot";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -75,12 +76,15 @@ export default async function Navbar() {
       </header>
 
       {user && (
-        <BottomNav
-          userId={user.id}
-          username={username}
-          avatarUrl={avatarUrl}
-          hasUnreadNotifications={hasUnreadNotifications}
-        />
+        <>
+          <BottomNav
+            userId={user.id}
+            username={username}
+            avatarUrl={avatarUrl}
+            hasUnreadNotifications={hasUnreadNotifications}
+          />
+          <Mascot />
+        </>
       )}
     </>
   );

@@ -441,3 +441,26 @@ alter table public.messages
 
 -- Limita o tamanho dos arquivos enviados pros buckets de imagem (5 MB).
 update storage.buckets set file_size_limit = 5242880 where id in ('posts', 'avatars', 'stories');
+
+-- ---------- VERIFIED (selo azul, concedido por admins) ----------
+alter table public.profiles
+  add column if not exists is_admin boolean not null default false;
+alter table public.profiles
+  add column if not exists verified boolean not null default false;
+
+-- Função segura: só quem é admin pode verificar/desverificar outra pessoa.
+-- Roda com privilégio elevado (security definer) justamente pra poder
+-- alterar a linha de OUTRO usuário, contornando o RLS normal de "só edito
+-- meu próprio perfil" — mas só depois de checar que quem chamou é admin.
+create or replace function public.set_verified(target_id uuid, new_verified boolean)
+returns void as $$
+begin
+  if not exists (
+    select 1 from public.profiles where id = auth.uid() and is_admin = true
+  ) then
+    raise exception 'Apenas administradores podem conceder o selo de verificado.';
+  end if;
+
+  update public.profiles set verified = new_verified where id = target_id;
+end;
+$$ language plpgsql security definer set search_path = public;

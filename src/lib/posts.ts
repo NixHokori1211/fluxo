@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PostCardData } from "@/components/PostCard";
 
 export const POSTS_SELECT = `id, image_url, caption, created_at,
-   author:profiles!posts_author_id_fkey ( id, username, avatar_url ),
+   author:profiles!posts_author_id_fkey ( id, username, avatar_url, verified ),
    likes ( user_id ),
    reactions ( user_id, emoji ),
    comments ( id, content, profiles ( username, avatar_url ) )`;
@@ -13,8 +13,8 @@ type RawPost = {
   caption: string | null;
   created_at: string;
   author:
-    | { id: string; username: string; avatar_url: string | null }
-    | { id: string; username: string; avatar_url: string | null }[]
+    | { id: string; username: string; avatar_url: string | null; verified: boolean }
+    | { id: string; username: string; avatar_url: string | null; verified: boolean }[]
     | null;
   likes: { user_id: string }[] | null;
   reactions: { user_id: string; emoji: string }[] | null;
@@ -45,7 +45,7 @@ export function transformPost(p: RawPost, currentUserId: string | null): PostCar
     image_url: p.image_url,
     caption: p.caption,
     created_at: p.created_at,
-    author: author ?? { id: "", username: "usuário", avatar_url: null },
+    author: author ?? { id: "", username: "usuário", avatar_url: null, verified: false },
     likeCount: p.likes?.length ?? 0,
     likedByMe: !!currentUserId && (p.likes ?? []).some((l) => l.user_id === currentUserId),
     reactionCounts,

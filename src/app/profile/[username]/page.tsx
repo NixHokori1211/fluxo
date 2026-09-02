@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import FollowButton from "@/components/FollowButton";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import VerifyToggleButton from "@/components/VerifyToggleButton";
 
 export default async function ProfilePage({
   params,
@@ -18,23 +20,33 @@ export default async function ProfilePage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, avatar_url")
+    .select("id, username, display_name, bio, avatar_url, verified")
     .eq("username", username)
     .single();
 
   if (!profile) notFound();
 
-  const [{ count: postCount }, { count: followerCount }, { count: followingCount }, { data: posts }] =
-    await Promise.all([
-      supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", profile.id),
-      supabase.from("follows").select("follower_id", { count: "exact", head: true }).eq("following_id", profile.id),
-      supabase.from("follows").select("following_id", { count: "exact", head: true }).eq("follower_id", profile.id),
-      supabase
-        .from("posts")
-        .select("id, image_url")
-        .eq("author_id", profile.id)
-        .order("created_at", { ascending: false }),
-    ]);
+  const [
+    { count: postCount },
+    { count: followerCount },
+    { count: followingCount },
+    { data: posts },
+    { data: myProfile },
+  ] = await Promise.all([
+    supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", profile.id),
+    supabase.from("follows").select("follower_id", { count: "exact", head: true }).eq("following_id", profile.id),
+    supabase.from("follows").select("following_id", { count: "exact", head: true }).eq("follower_id", profile.id),
+    supabase
+      .from("posts")
+      .select("id, image_url")
+      .eq("author_id", profile.id)
+      .order("created_at", { ascending: false }),
+    user
+      ? supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const isAdmin = myProfile?.is_admin === true;
 
   let isFollowing = false;
   if (user) {
@@ -59,9 +71,10 @@ export default async function ProfilePage({
         </div>
 
         <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-medium">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="flex items-center gap-1.5 text-lg font-medium">
               {profile.display_name || profile.username}
+              {profile.verified && <VerifiedBadge size={18} />}
             </h1>
             {user?.id === profile.id ? (
               <Link
@@ -86,6 +99,9 @@ export default async function ProfilePage({
                   </Link>
                 )}
               </>
+            )}
+            {isAdmin && user?.id !== profile.id && (
+              <VerifyToggleButton targetUserId={profile.id} initiallyVerified={profile.verified} />
             )}
           </div>
           <p className="text-sm text-muted">@{profile.username}</p>

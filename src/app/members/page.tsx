@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import FollowButton from "@/components/FollowButton";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import VerifyToggleButton from "@/components/VerifyToggleButton";
 
 export default async function MembersPage() {
   const supabase = await createClient();
@@ -9,16 +11,20 @@ export default async function MembersPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: profiles }, { data: myFollows }] = await Promise.all([
+  const [{ data: profiles }, { data: myFollows }, { data: myProfile }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, username, display_name, avatar_url, bio, created_at")
+      .select("id, username, display_name, avatar_url, bio, created_at, verified")
       .order("created_at", { ascending: true }),
     user
       ? supabase.from("follows").select("following_id").eq("follower_id", user.id)
       : Promise.resolve({ data: [] as { following_id: string }[] | null }),
+    user
+      ? supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
   ]);
 
+  const isAdmin = myProfile?.is_admin === true;
   const followingIds = new Set((myFollows ?? []).map((f) => f.following_id));
 
   const members = (profiles ?? []).filter((p) => p.id !== user?.id);
@@ -42,18 +48,26 @@ export default async function MembersPage() {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{m.display_name || m.username}</p>
+                <p className="flex items-center gap-1 truncate text-sm font-medium">
+                  {m.display_name || m.username}
+                  {m.verified && <VerifiedBadge size={13} />}
+                </p>
                 <p className="truncate text-xs text-muted">@{m.username}</p>
               </div>
             </Link>
 
-            {user && (
-              <FollowButton
-                targetUserId={m.id}
-                currentUserId={user.id}
-                initiallyFollowing={followingIds.has(m.id)}
-              />
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+              {isAdmin && (
+                <VerifyToggleButton targetUserId={m.id} initiallyVerified={m.verified} />
+              )}
+              {user && (
+                <FollowButton
+                  targetUserId={m.id}
+                  currentUserId={user.id}
+                  initiallyFollowing={followingIds.has(m.id)}
+                />
+              )}
+            </div>
           </li>
         ))}
       </ul>

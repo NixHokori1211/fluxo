@@ -3,13 +3,14 @@ import Image from "next/image";
 import LikeButton from "@/components/LikeButton";
 import ReactionBar from "@/components/ReactionBar";
 import CommentSection from "@/components/CommentSection";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 export type PostCardData = {
   id: string;
   image_url: string;
   caption: string | null;
   created_at: string;
-  author: { id: string; username: string; avatar_url?: string | null };
+  author: { id: string; username: string; avatar_url?: string | null; verified?: boolean };
   likeCount: number;
   likedByMe: boolean;
   reactionCounts: Record<string, number>;
@@ -41,8 +42,9 @@ export default function PostCard({
             post.author.username.slice(0, 1).toUpperCase()
           )}
         </div>
-        <Link href={`/profile/${post.author.username}`} className="text-sm font-medium">
+        <Link href={`/profile/${post.author.username}`} className="flex items-center gap-1 text-sm font-medium">
           {post.author.username}
+          {post.author.verified && <VerifiedBadge />}
         </Link>
       </div>
 

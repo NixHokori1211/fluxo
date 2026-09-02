@@ -62,9 +62,10 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "meta/llama-3.1-8b-instruct",
-        max_tokens: 300,
+        model: "moonshotai/kimi-k3",
+        max_tokens: 512,
         temperature: 0.8,
+        reasoning_effort: "low",
         messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
       }),
     });

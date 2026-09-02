@@ -305,6 +305,36 @@ create trigger on_follow_created
   after insert on public.follows
   for each row execute procedure public.notify_on_follow();
 
+-- ---------- REACTIONS (emojis além da curtida: 🔥😂😮👏) ----------
+create table if not exists public.reactions (
+  post_id uuid not null references public.posts(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  emoji text not null check (emoji in ('🔥', '😂', '😮', '👏')),
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+
+alter table public.reactions enable row level security;
+
+create policy "Reações são públicas para leitura"
+  on public.reactions for select
+  using (true);
+
+create policy "Usuário reage como ele mesmo"
+  on public.reactions for insert
+  with check (auth.uid() = user_id);
+
+create policy "Usuário troca apenas a própria reação"
+  on public.reactions for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Usuário remove apenas a própria reação"
+  on public.reactions for delete
+  using (auth.uid() = user_id);
+
+create index if not exists reactions_post_id_idx on public.reactions(post_id);
+
 -- ---------- STORIES (expiram em 24h) ----------
 create table if not exists public.stories (
   id uuid primary key default gen_random_uuid(),

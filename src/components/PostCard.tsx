@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import LikeButton from "@/components/LikeButton";
+import ReactionBar from "@/components/ReactionBar";
 import CommentSection from "@/components/CommentSection";
 
 export type PostCardData = {
@@ -11,6 +12,8 @@ export type PostCardData = {
   author: { id: string; username: string; avatar_url?: string | null };
   likeCount: number;
   likedByMe: boolean;
+  reactionCounts: Record<string, number>;
+  myReaction: string | null;
   comments: {
     id: string;
     content: string;
@@ -54,12 +57,20 @@ export default function PostCard({
       </div>
 
       <div className="flex flex-col gap-2 px-4 py-3">
-        <LikeButton
-          postId={post.id}
-          userId={currentUserId}
-          initiallyLiked={post.likedByMe}
-          initialCount={post.likeCount}
-        />
+        <div className="flex items-center justify-between gap-2">
+          <LikeButton
+            postId={post.id}
+            userId={currentUserId}
+            initiallyLiked={post.likedByMe}
+            initialCount={post.likeCount}
+          />
+          <ReactionBar
+            postId={post.id}
+            userId={currentUserId}
+            initialCounts={post.reactionCounts}
+            initialMyReaction={post.myReaction}
+          />
+        </div>
 
         {post.caption && (
           <p className="text-sm">

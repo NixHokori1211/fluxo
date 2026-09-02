@@ -4,6 +4,7 @@ import type { PostCardData } from "@/components/PostCard";
 export const POSTS_SELECT = `id, image_url, caption, created_at,
    author:profiles!posts_author_id_fkey ( id, username, avatar_url ),
    likes ( user_id ),
+   reactions ( user_id, emoji ),
    comments ( id, content, profiles ( username, avatar_url ) )`;
 
 type RawPost = {
@@ -16,6 +17,7 @@ type RawPost = {
     | { id: string; username: string; avatar_url: string | null }[]
     | null;
   likes: { user_id: string }[] | null;
+  reactions: { user_id: string; emoji: string }[] | null;
   comments:
     | {
         id: string;
@@ -31,6 +33,13 @@ type RawPost = {
 export function transformPost(p: RawPost, currentUserId: string | null): PostCardData {
   const author = Array.isArray(p.author) ? p.author[0] : p.author;
 
+  const reactionCounts: Record<string, number> = {};
+  let myReaction: string | null = null;
+  for (const r of p.reactions ?? []) {
+    reactionCounts[r.emoji] = (reactionCounts[r.emoji] ?? 0) + 1;
+    if (currentUserId && r.user_id === currentUserId) myReaction = r.emoji;
+  }
+
   return {
     id: p.id,
     image_url: p.image_url,
@@ -39,6 +48,8 @@ export function transformPost(p: RawPost, currentUserId: string | null): PostCar
     author: author ?? { id: "", username: "usuário", avatar_url: null },
     likeCount: p.likes?.length ?? 0,
     likedByMe: !!currentUserId && (p.likes ?? []).some((l) => l.user_id === currentUserId),
+    reactionCounts,
+    myReaction,
     comments: (p.comments ?? []).map((c) => {
       const commentAuthor = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
       return {

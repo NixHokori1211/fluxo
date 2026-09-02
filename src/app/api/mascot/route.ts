@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
       { error: "Mascote ainda não configurado (falta a chave da API)." },
@@ -55,37 +55,32 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "meta/llama-3.1-8b-instruct",
         max_tokens: 300,
-        system: SYSTEM_PROMPT,
-        messages,
+        temperature: 0.8,
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Erro da API da Anthropic:", errText);
+      console.error("Erro da API da NVIDIA:", errText);
       return NextResponse.json({ error: "O Bip tá com soneca. Tenta de novo." }, { status: 502 });
     }
 
     const data = await response.json();
-    const reply = (data.content ?? [])
-      .filter((block: { type: string }) => block.type === "text")
-      .map((block: { text: string }) => block.text)
-      .join("\n")
-      .trim();
+    const reply = (data.choices?.[0]?.message?.content ?? "").trim();
 
     return NextResponse.json({ reply: reply || "..." });
   } catch (err) {
-    console.error("Falha ao chamar a API da Anthropic:", err);
+    console.error("Falha ao chamar a API da NVIDIA:", err);
     return NextResponse.json({ error: "O Bip tá com soneca. Tenta de novo." }, { status: 500 });
   }
 }

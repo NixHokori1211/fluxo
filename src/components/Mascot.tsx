@@ -3,27 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send } from "lucide-react";
-
-type ChatMessage = { role: "user" | "assistant"; content: string };
+import { createAvatar } from "@/vendor/avatar-react";
+import bipDefinition from "@/lib/bip-avatar.json";
 
 const BUBBLE_TRANSITION = { type: "spring" as const, stiffness: 450, damping: 28, mass: 1 };
 
-function BipFace({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="20" r="20" fill="var(--accent)" />
-      <circle cx="14" cy="18" r="2.5" fill="var(--accent-foreground)" />
-      <circle cx="26" cy="18" r="2.5" fill="var(--accent-foreground)" />
-      <path
-        d="M13 25c2 2.5 5 3.5 7 3.5s5-1 7-3.5"
-        stroke="var(--accent-foreground)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
-  );
-}
+type ChatMessage = { role: "user" | "assistant"; content: string };
+const BipAvatar = createAvatar(bipDefinition);
+type BipAnimation = "idle" | "listening" | "thinking" | "happy" | "laughing";
 
 export default function Mascot() {
   const [open, setOpen] = useState(false);
@@ -31,11 +18,23 @@ export default function Mascot() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [animation, setAnimation] = useState<BipAnimation>("idle");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const happyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    setAnimation(open ? "listening" : "idle");
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +46,7 @@ export default function Mascot() {
     setText("");
     setError(null);
     setLoading(true);
+    setAnimation("thinking");
 
     try {
       const res = await fetch("/api/mascot", {
@@ -59,8 +59,11 @@ export default function Mascot() {
       if (!res.ok) throw new Error(data.error || "Algo deu errado.");
 
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      setAnimation("happy");
+      happyTimeoutRef.current = setTimeout(() => setAnimation("listening"), 2500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "O Bip tá com soneca. Tenta de novo.");
+      setAnimation("listening");
     } finally {
       setLoading(false);
     }
@@ -80,7 +83,7 @@ export default function Mascot() {
           >
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
-                <BipFace size={26} />
+                <BipAvatar animation={animation} size={40} ariaLabel="Bip" />
                 <div>
                   <p className="text-sm font-medium">Bip</p>
                   <p className="text-xs text-muted">mascote do pulso</p>
@@ -187,7 +190,7 @@ export default function Mascot() {
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
         whileTap={{ scale: 0.92 }}
       >
-        <BipFace size={32} />
+        <BipAvatar animation={animation} size={48} ariaLabel={open ? "Fechar o Bip" : "Abrir o Bip"} />
       </motion.button>
     </>
   );

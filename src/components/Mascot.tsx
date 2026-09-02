@@ -62,7 +62,7 @@ export default function Mascot() {
       setAnimation("happy");
       happyTimeoutRef.current = setTimeout(() => setAnimation("listening"), 2500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "O Bip tá com soneca. Tenta de novo.");
+      setError(err instanceof Error ? err.message : "O Roku tá com soneca. Tenta de novo.");
       setAnimation("listening");
     } finally {
       setLoading(false);
@@ -83,9 +83,9 @@ export default function Mascot() {
           >
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
-                <BipAvatar animation={animation} size={40} ariaLabel="Bip" />
+                <BipAvatar animation={animation} size={40} ariaLabel="Roku" />
                 <div>
-                  <p className="text-sm font-medium">Bip</p>
+                  <p className="text-sm font-medium">Roku</p>
                   <p className="text-xs text-muted">mascote do pulso</p>
                 </div>
               </div>
@@ -102,7 +102,7 @@ export default function Mascot() {
               <div className="flex flex-col gap-2">
                 {messages.length === 0 && (
                   <div className="max-w-[85%] self-start rounded-2xl border border-border bg-background px-3.5 py-2 text-sm">
-                    Oi! Eu sou o Bip 👋 Bora bater papo?
+                    Oi! Eu sou o Roku 👋 Bora bater papo?
                   </div>
                 )}
 
@@ -163,7 +163,7 @@ export default function Mascot() {
                   type="text"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="Fala com o Bip..."
+                  placeholder="Fala com o Roku..."
                   maxLength={500}
                   className="flex-1 rounded-full border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-accent"
                 />
@@ -183,14 +183,14 @@ export default function Mascot() {
 
       <motion.button
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Fechar o Bip" : "Abrir o Bip"}
+        aria-label={open ? "Fechar o Roku" : "Abrir o Roku"}
         className="fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-surface shadow-lg ring-1 ring-border sm:right-6"
         style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
         whileTap={{ scale: 0.92 }}
       >
-        <BipAvatar animation={animation} size={48} ariaLabel={open ? "Fechar o Bip" : "Abrir o Bip"} />
+        <BipAvatar animation={animation} size={48} ariaLabel={open ? "Fechar o Roku" : "Abrir o Roku"} />
       </motion.button>
     </>
   );

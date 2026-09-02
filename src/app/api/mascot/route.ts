@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const SYSTEM_PROMPT = `Você é o Bip, o mascote do pulso — uma rede social pequena e fechada
+const SYSTEM_PROMPT = `Você é o Roku, o mascote do pulso — uma rede social pequena e fechada
 pra um grupo de amigos próximos (não é o Instagram, é só pra esse grupo).
 
 Personalidade: animado, brincalhão, curto e direto. Fala em português informal do Brasil.
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     if (!response.ok) {
       const errText = await response.text();
       console.error("Erro da API da NVIDIA:", errText);
-      return NextResponse.json({ error: "O Bip tá com soneca. Tenta de novo." }, { status: 502 });
+      return NextResponse.json({ error: "O Roku tá com soneca. Tenta de novo." }, { status: 502 });
     }
 
     const data = await response.json();
@@ -82,6 +82,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply: reply || "..." });
   } catch (err) {
     console.error("Falha ao chamar a API da NVIDIA:", err);
-    return NextResponse.json({ error: "O Bip tá com soneca. Tenta de novo." }, { status: 500 });
+    return NextResponse.json({ error: "O Roku tá com soneca. Tenta de novo." }, { status: 500 });
   }
 }

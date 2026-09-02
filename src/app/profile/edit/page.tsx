@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cropToSquare } from "@/lib/image";
+import { validateImageFile } from "@/lib/upload";
 import { ImagePlus } from "lucide-react";
 
 export default function EditProfilePage() {
@@ -58,6 +59,13 @@ export default function EditProfilePage() {
       setAvatarPreview(null);
       return;
     }
+
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError(null);
 
     setProcessingAvatar(true);
     try {

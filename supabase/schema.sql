@@ -335,6 +335,45 @@ create policy "Usuário remove apenas a própria reação"
 
 create index if not exists reactions_post_id_idx on public.reactions(post_id);
 
+-- ---------- ENDURECIMENTO DE SEGURANÇA ----------
+
+-- Valida o formato do username também no banco (defesa extra, além do
+-- formulário no navegador) — minúsculas, números, ponto e underscore.
+alter table public.profiles
+  drop constraint if exists profiles_username_format;
+alter table public.profiles
+  add constraint profiles_username_format
+  check (username ~ '^[a-z0-9_.]{3,30}$');
+
+alter table public.profiles
+  drop constraint if exists profiles_bio_length;
+alter table public.profiles
+  add constraint profiles_bio_length
+  check (bio is null or char_length(bio) <= 300);
+
+-- Limita o tamanho dos textos de posts, comentários e mensagens no banco
+-- (o app já limita no formulário, isso é a garantia final).
+alter table public.posts
+  drop constraint if exists posts_caption_length;
+alter table public.posts
+  add constraint posts_caption_length
+  check (caption is null or char_length(caption) <= 2200);
+
+alter table public.comments
+  drop constraint if exists comments_content_length;
+alter table public.comments
+  add constraint comments_content_length
+  check (char_length(content) between 1 and 2200);
+
+alter table public.messages
+  drop constraint if exists messages_content_length;
+alter table public.messages
+  add constraint messages_content_length
+  check (char_length(content) between 1 and 2000);
+
+-- Limita o tamanho dos arquivos enviados pros buckets de imagem (5 MB).
+update storage.buckets set file_size_limit = 5242880 where id in ('posts', 'avatars', 'stories');
+
 -- ---------- STORIES (expiram em 24h) ----------
 create table if not exists public.stories (
   id uuid primary key default gen_random_uuid(),

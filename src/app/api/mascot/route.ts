@@ -19,6 +19,31 @@ Regras:
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_HISTORY = 12;
 
+// Limite de uso simples por pessoa: no máximo 8 mensagens por minuto.
+// Isso vive na memória da função — funciona bem pra evitar abuso na maioria
+// dos casos, mas reseta se a Vercel iniciar uma instância nova (é uma
+// proteção "boa o suficiente" pro tamanho do grupo, não uma garantia
+// matemática perfeita).
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 8;
+const requestLog = new Map<string, number[]>();
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const timestamps = (requestLog.get(userId) ?? []).filter(
+    (t) => now - t < RATE_LIMIT_WINDOW_MS
+  );
+
+  if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
+    requestLog.set(userId, timestamps);
+    return true;
+  }
+
+  timestamps.push(now);
+  requestLog.set(userId, timestamps);
+  return false;
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const {
@@ -27,6 +52,13 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  }
+
+  if (isRateLimited(user.id)) {
+    return NextResponse.json(
+      { error: "Devagar aí! Espera um pouquinho antes de mandar outra mensagem." },
+      { status: 429 }
+    );
   }
 
   const apiKey = process.env.NVIDIA_API_KEY;

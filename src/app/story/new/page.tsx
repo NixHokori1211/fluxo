@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { validateImageFile } from "@/lib/upload";
 import { ImagePlus } from "lucide-react";
 
 export default function NewStoryPage() {
@@ -14,6 +15,14 @@ export default function NewStoryPage() {
   const [loading, setLoading] = useState(false);
 
   function handleFile(f: File | null) {
+    if (f) {
+      const validationError = validateImageFile(f);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+    }
+    setError(null);
     setFile(f);
     setPreview(f ? URL.createObjectURL(f) : null);
   }

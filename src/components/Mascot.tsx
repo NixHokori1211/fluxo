@@ -19,8 +19,10 @@ export default function Mascot() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [animation, setAnimation] = useState<BipAnimation>("idle");
+  const [loadingHint, setLoadingHint] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const happyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hintTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,6 +35,7 @@ export default function Mascot() {
   useEffect(() => {
     return () => {
       if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
+      hintTimeoutsRef.current.forEach(clearTimeout);
     };
   }, []);
 
@@ -47,6 +50,14 @@ export default function Mascot() {
     setError(null);
     setLoading(true);
     setAnimation("thinking");
+    setLoadingHint(null);
+
+    hintTimeoutsRef.current.forEach(clearTimeout);
+    hintTimeoutsRef.current = [
+      setTimeout(() => setLoadingHint("Ainda pensando..."), 12_000),
+      setTimeout(() => setLoadingHint("Quase lá, ele é meio devagar mesmo 🐢"), 35_000),
+      setTimeout(() => setLoadingHint("Desculpa a demora, tá quase saindo..."), 65_000),
+    ];
 
     try {
       const res = await fetch("/api/mascot", {
@@ -66,6 +77,8 @@ export default function Mascot() {
       setAnimation("listening");
     } finally {
       setLoading(false);
+      setLoadingHint(null);
+      hintTimeoutsRef.current.forEach(clearTimeout);
     }
   }
 
@@ -133,22 +146,29 @@ export default function Mascot() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       transition={BUBBLE_TRANSITION}
-                      className="inline-flex items-center gap-1 self-start rounded-2xl border border-border bg-background px-3.5 py-3"
-                      style={{ borderRadius: "18px 18px 18px 4px" }}
+                      className="flex flex-col items-start gap-1"
                     >
-                      {[0, 1, 2].map((i) => (
-                        <motion.span
-                          key={i}
-                          className="h-1.5 w-1.5 rounded-full bg-muted"
-                          animate={{ y: [0, -5, 0], opacity: [0.35, 1, 0.35] }}
-                          transition={{
-                            duration: 0.8,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: i * 0.18,
-                          }}
-                        />
-                      ))}
+                      <div
+                        className="inline-flex items-center gap-1 self-start rounded-2xl border border-border bg-background px-3.5 py-3"
+                        style={{ borderRadius: "18px 18px 18px 4px" }}
+                      >
+                        {[0, 1, 2].map((i) => (
+                          <motion.span
+                            key={i}
+                            className="h-1.5 w-1.5 rounded-full bg-muted"
+                            animate={{ y: [0, -5, 0], opacity: [0.35, 1, 0.35] }}
+                            transition={{
+                              duration: 0.8,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                              delay: i * 0.18,
+                            }}
+                          />
+                        ))}
+                      </div>
+                      {loadingHint && (
+                        <span className="pl-1 text-xs text-muted">{loadingHint}</span>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

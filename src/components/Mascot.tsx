@@ -184,8 +184,8 @@ export default function Mascot() {
       <motion.button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Fechar o Roku" : "Abrir o Roku"}
-        className="fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-surface shadow-lg ring-1 ring-border sm:right-6"
-        style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+        className="fixed right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-surface shadow-lg ring-1 ring-border sm:right-6"
+        style={{ bottom: "calc(7rem + env(safe-area-inset-bottom))" }}
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
         whileTap={{ scale: 0.92 }}

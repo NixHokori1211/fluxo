@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+// O Kimi K3 pode demorar mais de um minuto pra responder (ele "pensa" antes
+// de falar). Isso evita que a Vercel corte a função no meio do caminho.
+export const maxDuration = 120;
+
 const SYSTEM_PROMPT = `Você é o Roku, o mascote do pulso — uma rede social pequena e fechada
 pra um grupo de amigos próximos (não é o Instagram, é só pra esse grupo).
 

@@ -99,6 +99,11 @@ lint/tmp/
 app/src/main/assets/public
 
 # Generated Config files
-app/src/main/assets/capacitor.config.json
-app/src/main/assets/capacitor.plugins.json
-app/src/main/res/xml/config.xml
+# (removidos do gitignore de propósito, pelo mesmo motivo da pasta
+# capacitor-cordova-android-plugins acima: o robô de build no GitHub
+# Actions não roda "npx cap sync", então esses arquivos precisam estar
+# no repositório — sem eles o app não sabe a URL do site e abre
+# "localhost" em vez do site de verdade.)
+# app/src/main/assets/capacitor.config.json
+# app/src/main/assets/capacitor.plugins.json
+# app/src/main/res/xml/config.xml

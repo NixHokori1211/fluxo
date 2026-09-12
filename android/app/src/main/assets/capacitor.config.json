@@ -1,0 +1,13 @@
+{
+	"appId": "app.pulso.social",
+	"appName": "pulso",
+	"webDir": "public",
+	"server": {
+		"url": "https://pulsonet.up.railway.app",
+		"cleartext": false,
+		"androidScheme": "https"
+	},
+	"android": {
+		"allowMixedContent": false
+	}
+}

@@ -9,6 +9,9 @@ on:
       - ".github/workflows/build-apk.yml"
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,9 +44,27 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Disponibilizar o APK pra download
+      - name: Renomear o APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk pulso.apk
+
+      - name: Disponibilizar o APK pra download (dentro do GitHub)
         uses: actions/upload-artifact@v4
         with:
           name: pulso-app
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: pulso.apk
           retention-days: 30
+
+      - name: Publicar como Release (link público pra baixar)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: pulso (Android)
+          body: |
+            APK mais recente do app Android do pulso.
+            Baixe o arquivo pulso.apk abaixo e instale no celular
+            (pode pedir pra permitir "fontes desconhecidas").
+          files: pulso.apk
+          prerelease: true
+          # Sempre atualiza a mesma release em vez de criar uma nova a
+          # cada push, assim o link de download nunca muda.
+          make_latest: true

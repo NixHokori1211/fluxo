@@ -1,0 +1,40 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - "capacitor.config.ts"
+      - ".github/workflows/build-apk.yml"
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar o Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Configurar o Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Dar permissão ao Gradle
+        run: chmod +x android/gradlew
+
+      - name: Compilar o APK (debug, pronto pra instalar)
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Disponibilizar o APK pra download
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulso-app
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

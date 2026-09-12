@@ -90,7 +90,10 @@ lint/tmp/
 *.hprof
 
 # Cordova plugins for Capacitor
-capacitor-cordova-android-plugins
+# (removido do gitignore de propósito: precisamos que essa pasta vá pro
+# repositório, senão o build automático no GitHub Actions falha — ela não
+# é recriada lá porque não rodamos "npx cap sync" no robô de build)
+# capacitor-cordova-android-plugins
 
 # Copied web assets
 app/src/main/assets/public

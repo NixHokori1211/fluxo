@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
 import type { StoryGroup } from "@/lib/stories";
 import StoryViewer from "@/components/StoryViewer";
@@ -85,14 +86,16 @@ export default function StoriesBar({
         })}
       </div>
 
-      {openIndex !== null && (
-        <StoryViewer
-          groups={groups}
-          startGroupIndex={openIndex}
-          currentUserId={currentUserId}
-          onClose={() => setOpenIndex(null)}
-        />
-      )}
+      <AnimatePresence>
+        {openIndex !== null && (
+          <StoryViewer
+            groups={groups}
+            startGroupIndex={openIndex}
+            currentUserId={currentUserId}
+            onClose={() => setOpenIndex(null)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

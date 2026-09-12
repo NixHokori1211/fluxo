@@ -1,9 +1,13 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import LikeButton from "@/components/LikeButton";
+import LikeButton, { type LikeButtonHandle } from "@/components/LikeButton";
 import ReactionBar from "@/components/ReactionBar";
 import CommentSection from "@/components/CommentSection";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import DoubleTapLike from "@/components/DoubleTapLike";
 
 export type PostCardData = {
   id: string;
@@ -32,6 +36,8 @@ export default function PostCard({
   currentUserId: string | null;
   currentUserAvatarUrl?: string | null;
 }) {
+  const likeButtonRef = useRef<LikeButtonHandle>(null);
+
   return (
     <article className="overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="flex items-center gap-2 px-4 py-3">
@@ -48,19 +54,22 @@ export default function PostCard({
         </Link>
       </div>
 
-      <div className="relative aspect-square w-full bg-black/5">
-        <Image
-          src={post.image_url}
-          alt={post.caption ?? `Publicação de ${post.author.username}`}
-          fill
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, 600px"
-        />
-      </div>
+      <DoubleTapLike onLike={() => likeButtonRef.current?.like()}>
+        <div className="relative aspect-square w-full bg-black/5">
+          <Image
+            src={post.image_url}
+            alt={post.caption ?? `Publicação de ${post.author.username}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 600px"
+          />
+        </div>
+      </DoubleTapLike>
 
       <div className="flex flex-col gap-2 px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           <LikeButton
+            ref={likeButtonRef}
             postId={post.id}
             userId={currentUserId}
             initiallyLiked={post.likedByMe}

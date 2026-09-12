@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
 export default function FollowButton({
@@ -52,11 +53,22 @@ export default function FollowButton({
       onClick={toggleFollow}
       className={
         following
-          ? "rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-black/5"
-          : "rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-foreground hover:opacity-90"
+          ? "rounded-full border border-border px-4 py-1.5 text-sm font-medium transition-colors hover:bg-black/5"
+          : "rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:opacity-90"
       }
     >
-      {following ? "Seguindo" : "Seguir"}
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={following ? "following" : "follow"}
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 4 }}
+          transition={{ duration: 0.15 }}
+          className="inline-block"
+        >
+          {following ? "Seguindo" : "Seguir"}
+        </motion.span>
+      </AnimatePresence>
     </button>
   );
 }

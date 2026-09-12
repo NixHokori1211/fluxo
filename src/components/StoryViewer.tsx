@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { X, Eye } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { StoryGroup } from "@/lib/stories";
@@ -131,8 +132,20 @@ export default function StoryViewer({
   if (!group || !story) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-      <div className="relative flex h-full w-full max-w-md flex-col">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+    >
+      <motion.div
+        initial={{ scale: 0.92 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="relative flex h-full w-full max-w-md flex-col"
+      >
         <div
           className="absolute left-3 right-3 z-10 flex gap-1"
           style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
@@ -221,7 +234,7 @@ export default function StoryViewer({
             )}
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

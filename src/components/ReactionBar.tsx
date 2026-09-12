@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
 const EMOJIS = ["🔥", "😂", "😮", "👏"] as const;
@@ -89,7 +90,15 @@ export default function ReactionBar({
                 : "border-border text-muted hover:border-foreground/30"
             }`}
           >
-            <span>{emoji}</span>
+            <motion.span
+              key={mine ? `${emoji}-mine` : emoji}
+              initial={mine ? { scale: 0.6 } : false}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              className="inline-block"
+            >
+              {emoji}
+            </motion.span>
             {count > 0 && <span className="tabular-nums">{count}</span>}
           </button>
         );

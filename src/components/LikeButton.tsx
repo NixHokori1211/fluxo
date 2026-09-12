@@ -1,34 +1,37 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { forwardRef, useImperativeHandle, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Heart } from "lucide-react";
 
-export default function LikeButton({
-  postId,
-  userId,
-  initiallyLiked,
-  initialCount,
-}: {
-  postId: string;
-  userId: string | null;
-  initiallyLiked: boolean;
-  initialCount: number;
-}) {
+export type LikeButtonHandle = {
+  like: () => void;
+};
+
+const LikeButton = forwardRef<
+  LikeButtonHandle,
+  {
+    postId: string;
+    userId: string | null;
+    initiallyLiked: boolean;
+    initialCount: number;
+  }
+>(function LikeButton({ postId, userId, initiallyLiked, initialCount }, ref) {
   const router = useRouter();
   const supabase = createClient();
   const [liked, setLiked] = useState(initiallyLiked);
   const [count, setCount] = useState(initialCount);
   const [, startTransition] = useTransition();
 
-  async function toggleLike() {
+  async function setLikedState(nextLiked: boolean) {
     if (!userId) {
       router.push("/login");
       return;
     }
+    if (nextLiked === liked) return;
 
-    const nextLiked = !liked;
     setLiked(nextLiked);
     setCount((c) => (nextLiked ? c + 1 : c - 1));
 
@@ -55,18 +58,43 @@ export default function LikeButton({
     });
   }
 
+  useImperativeHandle(ref, () => ({
+    like: () => setLikedState(true),
+  }));
+
   return (
     <button
-      onClick={toggleLike}
+      onClick={() => setLikedState(!liked)}
       className="flex items-center gap-1.5 text-sm"
       aria-pressed={liked}
       aria-label={liked ? "Descurtir" : "Curtir"}
     >
-      <Heart
-        size={20}
-        className={liked ? "fill-danger text-danger" : "text-foreground/70"}
-      />
-      <span className="tabular-nums text-foreground/70">{count}</span>
+      <motion.span
+        key={liked ? "liked" : "unliked"}
+        initial={{ scale: 0.7 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 15 }}
+        className="inline-flex"
+      >
+        <Heart
+          size={20}
+          className={liked ? "fill-danger text-danger" : "text-foreground/70"}
+        />
+      </motion.span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={count}
+          initial={{ y: -8, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 8, opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="inline-block tabular-nums text-foreground/70"
+        >
+          {count}
+        </motion.span>
+      </AnimatePresence>
     </button>
   );
-}
+});
+
+export default LikeButton;

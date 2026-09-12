@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
 type Comment = {
@@ -68,21 +69,29 @@ export default function CommentSection({
     <div className="flex flex-col gap-2">
       {comments.length > 0 && (
         <ul className="flex flex-col gap-2">
-          {comments.map((c) => (
-            <li key={c.id} className="flex items-start gap-2 text-sm">
-              <div className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-[10px] font-medium text-accent-foreground">
-                {c.author_avatar_url ? (
-                  <Image src={c.author_avatar_url} alt="" fill className="object-cover" sizes="20px" />
-                ) : (
-                  c.author_username.slice(0, 1).toUpperCase()
-                )}
-              </div>
-              <p>
-                <span className="font-medium">{c.author_username}</span>{" "}
-                <span className="text-foreground/80">{c.content}</span>
-              </p>
-            </li>
-          ))}
+          <AnimatePresence initial={false}>
+            {comments.map((c) => (
+              <motion.li
+                key={c.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-start gap-2 text-sm"
+              >
+                <div className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent text-[10px] font-medium text-accent-foreground">
+                  {c.author_avatar_url ? (
+                    <Image src={c.author_avatar_url} alt="" fill className="object-cover" sizes="20px" />
+                  ) : (
+                    c.author_username.slice(0, 1).toUpperCase()
+                  )}
+                </div>
+                <p>
+                  <span className="font-medium">{c.author_username}</span>{" "}
+                  <span className="text-foreground/80">{c.content}</span>
+                </p>
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
 

@@ -5,6 +5,7 @@ export const POSTS_SELECT = `id, image_url, caption, created_at,
    author:profiles!posts_author_id_fkey ( id, username, avatar_url, verified ),
    likes ( user_id ),
    reactions ( user_id, emoji ),
+   post_images ( image_url, position ),
    comments ( id, content, profiles ( username, avatar_url ) )`;
 
 type RawPost = {
@@ -18,6 +19,7 @@ type RawPost = {
     | null;
   likes: { user_id: string }[] | null;
   reactions: { user_id: string; emoji: string }[] | null;
+  post_images: { image_url: string; position: number }[] | null;
   comments:
     | {
         id: string;
@@ -40,9 +42,14 @@ export function transformPost(p: RawPost, currentUserId: string | null): PostCar
     if (currentUserId && r.user_id === currentUserId) myReaction = r.emoji;
   }
 
+  const images =
+    p.post_images && p.post_images.length > 0
+      ? [...p.post_images].sort((a, b) => a.position - b.position).map((img) => img.image_url)
+      : [p.image_url];
+
   return {
     id: p.id,
-    image_url: p.image_url,
+    images,
     caption: p.caption,
     created_at: p.created_at,
     author: author ?? { id: "", username: "usuário", avatar_url: null, verified: false },

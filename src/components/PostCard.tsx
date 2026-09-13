@@ -8,10 +8,11 @@ import ReactionBar from "@/components/ReactionBar";
 import CommentSection from "@/components/CommentSection";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import DoubleTapLike from "@/components/DoubleTapLike";
+import PostImageCarousel from "@/components/PostImageCarousel";
 
 export type PostCardData = {
   id: string;
-  image_url: string;
+  images: string[];
   caption: string | null;
   created_at: string;
   author: { id: string; username: string; avatar_url?: string | null; verified?: boolean };
@@ -55,15 +56,10 @@ export default function PostCard({
       </div>
 
       <DoubleTapLike onLike={() => likeButtonRef.current?.like()}>
-        <div className="relative aspect-square w-full bg-black/5">
-          <Image
-            src={post.image_url}
-            alt={post.caption ?? `Publicação de ${post.author.username}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, 600px"
-          />
-        </div>
+        <PostImageCarousel
+          images={post.images}
+          alt={post.caption ?? `Publicação de ${post.author.username}`}
+        />
       </DoubleTapLike>
 
       <div className="flex flex-col gap-2 px-4 py-3">

@@ -464,3 +464,34 @@ begin
   update public.profiles set verified = new_verified where id = target_id;
 end;
 $$ language plpgsql security definer set search_path = public;
+
+-- ---------- POST_IMAGES (carrossel: várias fotos por post) ----------
+-- posts.image_url continua sendo a capa (usada na grade do perfil).
+-- Essa tabela guarda TODAS as fotos do post, em ordem, pro carrossel.
+create table if not exists public.post_images (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references public.posts(id) on delete cascade,
+  image_url text not null,
+  position integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.post_images enable row level security;
+
+create policy "Imagens de posts são públicas para leitura"
+  on public.post_images for select
+  using (true);
+
+create policy "Usuário adiciona imagens apenas aos próprios posts"
+  on public.post_images for insert
+  with check (
+    exists (select 1 from public.posts p where p.id = post_id and p.author_id = auth.uid())
+  );
+
+create policy "Usuário apaga imagens apenas dos próprios posts"
+  on public.post_images for delete
+  using (
+    exists (select 1 from public.posts p where p.id = post_id and p.author_id = auth.uid())
+  );
+
+create index if not exists post_images_post_id_idx on public.post_images(post_id, position);

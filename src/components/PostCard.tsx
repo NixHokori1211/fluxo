@@ -15,7 +15,7 @@ export type PostCardData = {
   images: string[];
   caption: string | null;
   created_at: string;
-  author: { id: string; username: string; avatar_url?: string | null; verified?: boolean };
+  author: { id: string; username: string; avatar_url?: string | null; verified?: boolean; is_owner?: boolean };
   likeCount: number;
   likedByMe: boolean;
   reactionCounts: Record<string, number>;
@@ -51,7 +51,11 @@ export default function PostCard({
         </div>
         <Link href={`/profile/${post.author.username}`} className="flex items-center gap-1 text-sm font-medium">
           {post.author.username}
-          {post.author.verified && <VerifiedBadge />}
+          {post.author.is_owner ? (
+            <VerifiedBadge variant="owner" />
+          ) : (
+            post.author.verified && <VerifiedBadge />
+          )}
         </Link>
       </div>
 

@@ -20,7 +20,7 @@ export default async function ProfilePage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, avatar_url, verified")
+    .select("id, username, display_name, bio, avatar_url, verified, is_owner")
     .eq("username", username)
     .single();
 
@@ -74,7 +74,11 @@ export default async function ProfilePage({
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="flex items-center gap-1.5 text-lg font-medium">
               {profile.display_name || profile.username}
-              {profile.verified && <VerifiedBadge size={18} />}
+              {profile.is_owner ? (
+                <VerifiedBadge size={18} variant="owner" />
+              ) : (
+                profile.verified && <VerifiedBadge size={18} />
+              )}
             </h1>
             {user?.id === profile.id ? (
               <Link

@@ -14,7 +14,7 @@ export default async function MembersPage() {
   const [{ data: profiles }, { data: myFollows }, { data: myProfile }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, username, display_name, avatar_url, bio, created_at, verified")
+      .select("id, username, display_name, avatar_url, bio, created_at, verified, is_owner")
       .order("created_at", { ascending: true }),
     user
       ? supabase.from("follows").select("following_id").eq("follower_id", user.id)
@@ -50,7 +50,11 @@ export default async function MembersPage() {
               <div className="min-w-0">
                 <p className="flex items-center gap-1 truncate text-sm font-medium">
                   {m.display_name || m.username}
-                  {m.verified && <VerifiedBadge size={13} />}
+                  {m.is_owner ? (
+                    <VerifiedBadge size={13} variant="owner" />
+                  ) : (
+                    m.verified && <VerifiedBadge size={13} />
+                  )}
                 </p>
                 <p className="truncate text-xs text-muted">@{m.username}</p>
               </div>

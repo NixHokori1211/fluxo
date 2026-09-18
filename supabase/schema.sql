@@ -495,3 +495,7 @@ create policy "Usuário apaga imagens apenas dos próprios posts"
   );
 
 create index if not exists post_images_post_id_idx on public.post_images(post_id, position);
+
+-- ---------- OWNER BADGE (selo especial, só pro dono do app) ----------
+alter table public.profiles
+  add column if not exists is_owner boolean not null default false;

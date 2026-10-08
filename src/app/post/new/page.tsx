@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validateImageFile } from "@/lib/upload";
-import { ImagePlus, X } from "lucide-react";
+import { BarChart3, ImagePlus, Plus, X } from "lucide-react";
 
 const MAX_PHOTOS = 10;
+const MAX_POLL_OPTIONS = 4;
 
 type PickedFile = { file: File; preview: string };
 
@@ -17,6 +18,13 @@ export default function NewPostPage() {
   const [caption, setCaption] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pollEnabled, setPollEnabled] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+
+  function updatePollOption(index: number, value: string) {
+    setPollOptions((prev) => prev.map((o, i) => (i === index ? value : o)));
+  }
 
   function handleFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
@@ -68,6 +76,18 @@ export default function NewPostPage() {
       return;
     }
 
+    const cleanOptions = pollOptions.map((o) => o.trim()).filter(Boolean);
+    if (pollEnabled) {
+      if (!pollQuestion.trim()) {
+        setError("Escreva a pergunta da enquete.");
+        return;
+      }
+      if (cleanOptions.length < 2) {
+        setError("A enquete precisa de pelo menos 2 opções preenchidas.");
+        return;
+      }
+    }
+
     setLoading(true);
 
     // Sobe todas as fotos em paralelo
@@ -116,12 +136,37 @@ export default function NewPostPage() {
       }))
     );
 
-    setLoading(false);
-
     if (imagesError) {
+      setLoading(false);
       setError("Publicação criada, mas houve um problema salvando as fotos extras.");
       return;
     }
+
+    if (pollEnabled) {
+      const { data: poll, error: pollError } = await supabase
+        .from("polls")
+        .insert({ post_id: post.id, question: pollQuestion.trim() })
+        .select("id")
+        .single();
+
+      if (pollError || !poll) {
+        setLoading(false);
+        setError("Publicação criada, mas não foi possível criar a enquete.");
+        return;
+      }
+
+      const { error: optionsError } = await supabase.from("poll_options").insert(
+        cleanOptions.map((text, position) => ({ poll_id: poll.id, text, position }))
+      );
+
+      if (optionsError) {
+        setLoading(false);
+        setError("Publicação criada, mas houve um problema salvando as opções da enquete.");
+        return;
+      }
+    }
+
+    setLoading(false);
 
     router.push("/feed");
     router.refresh();
@@ -186,6 +231,68 @@ export default function NewPostPage() {
           rows={3}
           className="rounded-lg border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-accent"
         />
+
+        {!pollEnabled ? (
+          <button
+            type="button"
+            onClick={() => setPollEnabled(true)}
+            className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-2.5 text-sm text-muted hover:border-accent hover:text-accent"
+          >
+            <BarChart3 size={16} />
+            Adicionar enquete
+          </button>
+        ) : (
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                <BarChart3 size={16} /> Enquete
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setPollEnabled(false);
+                  setPollQuestion("");
+                  setPollOptions(["", ""]);
+                }}
+                aria-label="Remover enquete"
+                className="text-muted hover:text-foreground"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <input
+              type="text"
+              value={pollQuestion}
+              onChange={(e) => setPollQuestion(e.target.value)}
+              maxLength={140}
+              placeholder="Qual é a pergunta?"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+            />
+
+            {pollOptions.map((opt, i) => (
+              <input
+                key={i}
+                type="text"
+                value={opt}
+                onChange={(e) => updatePollOption(i, e.target.value)}
+                maxLength={80}
+                placeholder={`Opção ${i + 1}`}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+              />
+            ))}
+
+            {pollOptions.length < MAX_POLL_OPTIONS && (
+              <button
+                type="button"
+                onClick={() => setPollOptions((prev) => [...prev, ""])}
+                className="flex items-center gap-1 self-start text-xs text-accent hover:underline"
+              >
+                <Plus size={12} /> Adicionar opção
+              </button>
+            )}
+          </div>
+        )}
 
         {error && <p className="text-sm text-danger">{error}</p>}
 

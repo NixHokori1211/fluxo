@@ -6,7 +6,15 @@ export const POSTS_SELECT = `id, image_url, caption, created_at,
    likes ( user_id ),
    reactions ( user_id, emoji ),
    post_images ( image_url, position ),
+   polls ( id, question, poll_options ( id, text, position ), poll_votes ( user_id, option_id ) ),
    comments ( id, content, profiles ( username, avatar_url ) )`;
+
+type RawPoll = {
+  id: string;
+  question: string;
+  poll_options: { id: string; text: string; position: number }[] | null;
+  poll_votes: { user_id: string; option_id: string }[] | null;
+};
 
 type RawPost = {
   id: string;
@@ -20,6 +28,7 @@ type RawPost = {
   likes: { user_id: string }[] | null;
   reactions: { user_id: string; emoji: string }[] | null;
   post_images: { image_url: string; position: number }[] | null;
+  polls: RawPoll | RawPoll[] | null;
   comments:
     | {
         id: string;
@@ -47,9 +56,31 @@ export function transformPost(p: RawPost, currentUserId: string | null): PostCar
       ? [...p.post_images].sort((a, b) => a.position - b.position).map((img) => img.image_url)
       : [p.image_url];
 
+  const rawPoll = Array.isArray(p.polls) ? p.polls[0] : p.polls;
+  let poll: PostCardData["poll"] = null;
+  if (rawPoll) {
+    const votes = rawPoll.poll_votes ?? [];
+    const options = [...(rawPoll.poll_options ?? [])]
+      .sort((a, b) => a.position - b.position)
+      .map((o) => ({
+        id: o.id,
+        text: o.text,
+        votes: votes.filter((v) => v.option_id === o.id).length,
+      }));
+    poll = {
+      id: rawPoll.id,
+      question: rawPoll.question,
+      options,
+      myVoteOptionId: currentUserId
+        ? votes.find((v) => v.user_id === currentUserId)?.option_id ?? null
+        : null,
+    };
+  }
+
   return {
     id: p.id,
     images,
+    poll,
     caption: p.caption,
     created_at: p.created_at,
     author: author ?? { id: "", username: "usuário", avatar_url: null, verified: false, is_owner: false },

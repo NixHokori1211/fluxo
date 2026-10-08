@@ -9,10 +9,12 @@ import CommentSection from "@/components/CommentSection";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import DoubleTapLike from "@/components/DoubleTapLike";
 import PostImageCarousel from "@/components/PostImageCarousel";
+import PollBlock, { type PollData } from "@/components/PollBlock";
 
 export type PostCardData = {
   id: string;
   images: string[];
+  poll: PollData | null;
   caption: string | null;
   created_at: string;
   author: { id: string; username: string; avatar_url?: string | null; verified?: boolean; is_owner?: boolean };
@@ -89,6 +91,8 @@ export default function PostCard({
             {post.caption}
           </p>
         )}
+
+        {post.poll && <PollBlock poll={post.poll} userId={currentUserId} />}
 
         <CommentSection
           postId={post.id}

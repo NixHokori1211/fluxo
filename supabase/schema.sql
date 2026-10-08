@@ -499,3 +499,83 @@ create index if not exists post_images_post_id_idx on public.post_images(post_id
 -- ---------- OWNER BADGE (selo especial, só pro dono do app) ----------
 alter table public.profiles
   add column if not exists is_owner boolean not null default false;
+
+-- ---------- POLLS (enquetes dentro dos posts) ----------
+create table if not exists public.polls (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null unique references public.posts(id) on delete cascade,
+  question text not null check (char_length(question) between 1 and 140),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.poll_options (
+  id uuid primary key default gen_random_uuid(),
+  poll_id uuid not null references public.polls(id) on delete cascade,
+  text text not null check (char_length(text) between 1 and 80),
+  position integer not null default 0
+);
+
+create table if not exists public.poll_votes (
+  poll_id uuid not null references public.polls(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  option_id uuid not null references public.poll_options(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (poll_id, user_id)
+);
+
+alter table public.polls enable row level security;
+alter table public.poll_options enable row level security;
+alter table public.poll_votes enable row level security;
+
+create policy "Enquetes são públicas para leitura"
+  on public.polls for select using (true);
+
+create policy "Autor cria enquete no próprio post"
+  on public.polls for insert
+  with check (
+    exists (select 1 from public.posts p where p.id = post_id and p.author_id = auth.uid())
+  );
+
+create policy "Opções são públicas para leitura"
+  on public.poll_options for select using (true);
+
+create policy "Autor cria opções na própria enquete"
+  on public.poll_options for insert
+  with check (
+    exists (
+      select 1 from public.polls pl
+      join public.posts p on p.id = pl.post_id
+      where pl.id = poll_id and p.author_id = auth.uid()
+    )
+  );
+
+create policy "Votos são públicos para leitura"
+  on public.poll_votes for select using (true);
+
+-- Só vota como si mesmo, e só em opção que pertence àquela enquete.
+create policy "Usuário vota como ele mesmo"
+  on public.poll_votes for insert
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from public.poll_options o
+      where o.id = option_id and o.poll_id = poll_votes.poll_id
+    )
+  );
+
+create policy "Usuário troca apenas o próprio voto"
+  on public.poll_votes for update
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from public.poll_options o
+      where o.id = option_id and o.poll_id = poll_votes.poll_id
+    )
+  );
+
+create policy "Usuário remove apenas o próprio voto"
+  on public.poll_votes for delete using (auth.uid() = user_id);
+
+create index if not exists poll_options_poll_id_idx on public.poll_options(poll_id, position);
+create index if not exists poll_votes_poll_id_idx on public.poll_votes(poll_id);
